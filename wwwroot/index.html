@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planirovshchik zadach</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --success-color: #4cc9f0;
+            --light-bg: #f8f9fa;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+        }
+
+        .task-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--primary-color);
+        }
+
+            .task-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            }
+
+            .task-card.completed {
+                border-left-color: #28a745;
+                background: #f8fff9;
+            }
+
+        .task-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+            .task-title.completed {
+                text-decoration: line-through;
+                color: #6c757d;
+            }
+
+        .task-description {
+            color: #666;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .task-meta {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .form-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 2rem;
+        }
+
+        .stats-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 1.5rem;
+        }
+
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .stats-label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-custom {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+            .btn-custom:hover {
+                background: var(--secondary-color);
+                transform: translateY(-2px);
+            }
+
+        .filter-btn {
+            border-radius: 20px;
+            padding: 0.5rem 1.5rem;
+            margin: 0 0.25rem;
+        }
+
+            .filter-btn.active {
+                background: var(--primary-color);
+                color: white;
+            }
+
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+            .action-btn:hover {
+                transform: scale(1.1);
+            }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+            .empty-state i {
+                font-size: 4rem;
+                margin-bottom: 1rem;
+                color: #ddd;
+            }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1><i class="bi bi-check2-circle"></i> Planirovshchik zadach</h1>
+                    <p class="lead mb-0">Organizuite svoi dela effektivno i prosto</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <span class="badge bg-light text-dark p-2">
+                        <i class="bi bi-database"></i> Zadachi sohraniaiutsia avtomaticheski
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="stats-card">
+                    <div class="stats-number" id="totalTasks">0</div>
+                    <div class="stats-label">Vsego zadach</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card">
+                    <div class="stats-number" id="activeTasks">0</div>
+                    <div class="stats-label">Aktivnyh</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card">
+                    <div class="stats-number" id="completedTasks">0</div>
+                    <div class="stats-label">Vypolneno</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-container">
+            <h3><i class="bi bi-plus-circle"></i> Novaya zadacha</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="taskTitle" class="form-label">Nazvanie zadachi *</label>
+                        <input type="text" class="form-control form-control-lg"
+                               id="taskTitle" placeholder="Chto nuzhno sdelat?" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="taskDescription" class="form-label">Opisanie (neobiazatelno)</label>
+                        <input type="text" class="form-control"
+                               id="taskDescription" placeholder="Detali zadachi...">
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-custom" onclick="addTask()">
+                <i class="bi bi-plus-lg"></i> Dobavit zadachu
+            </button>
+        </div>
+
+        <div class="d-flex justify-content-center mb-4">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-primary filter-btn active"
+                        onclick="filterTasks('all')" id="filterAll">
+                    <i class="bi bi-list-ul"></i> Vse zadachi
+                </button>
+                <button type="button" class="btn btn-outline-primary filter-btn"
+                        onclick="filterTasks('active')" id="filterActive">
+                    <i class="bi bi-circle"></i> Aktivnye
+                </button>
+                <button type="button" class="btn btn-outline-primary filter-btn"
+                        onclick="filterTasks('completed')" id="filterCompleted">
+                    <i class="bi bi-check-circle"></i> Vypolnennye
+                </button>
+            </div>
+        </div>
+
+        <div id="tasksContainer">
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Zagruzka...</span>
+                </div>
+                <p class="mt-2">Zagruzhaem zadachi...</p>
+            </div>
+        </div>
+
+        <div class="text-center mt-5 text-muted">
+            <p><i class="bi bi-check2"></i> Uchebnyi proekt "Planirovshchik zadach"</p>
+            <p><i class="bi bi-code-slash"></i> ASP.NET Core Web API + SQLite + HTML/CSS/JS</p>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil"></i> Redaktirovat zadachu</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nazvanie *</label>
+                        <input type="text" class="form-control" id="editTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Opisanie</label>
+                        <textarea class="form-control" id="editDescription" rows="3"></textarea>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="editIsCompleted">
+                        <label class="form-check-label" for="editIsCompleted">
+                            Zadacha vypolnena
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg"></i> Otmena
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="saveEditedTask()">
+                        <i class="bi bi-save"></i> Sohranit
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentFilter = 'all';
+        let currentEditId = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTasks();
+        });
+
+        async function loadTasks() {
+            try {
+                showLoading(true);
+                let url = '/api/tasks';
+                if (currentFilter === 'active') {
+                    url += '?completed=false';
+                } else if (currentFilter === 'completed') {
+                    url += '?completed=true';
+                }
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Oshibka zagruzki');
+
+                const tasks = await response.json();
+                renderTasks(tasks);
+                updateStats(tasks);
+            } catch (error) {
+                console.error('Oshibka:', error);
+                document.getElementById('tasksContainer').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Oshibka zagruzki zadach. Proverte podkliuchenie k serveru.
+                    </div>`;
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function filterTasks(filter) {
+            currentFilter = filter;
+
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById('filter' + filter.charAt(0).toUpperCase() + filter.slice(1)).classList.add('active');
+
+            loadTasks();
+        }
+
+        function renderTasks(tasks) {
+            const container = document.getElementById('tasksContainer');
+
+            if (!tasks || tasks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-clipboard"></i>
+                        <h4>Net zadach</h4>
+                        <p>Dobavite svoiu pervuiu zadachu vyshe</p>
+                    </div>`;
+                return;
+            }
+
+            let html = '';
+            tasks.forEach(task => {
+                const createdDate = new Date(task.createdDate).toLocaleDateString('ru-RU', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                const completedDate = task.completedDate
+                    ? new Date(task.completedDate).toLocaleDateString('ru-RU')
+                    : '';
+
+                html += `
+                <div class="task-card ${task.isCompleted ? 'completed' : ''}">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="task-title ${task.isCompleted ? 'completed' : ''}">
+                                ${task.title}
+                                ${task.isCompleted ?
+                                    '<span class="badge bg-success ms-2"><i class="bi bi-check-lg"></i> Vypolneno</span>' : ''}
+                            </div>
+                            ${task.description ?
+                                `<div class="task-description">${task.description}</div>` : ''}
+                            <div class="task-meta">
+                                <i class="bi bi-calendar-plus"></i> Sozdano: ${createdDate}
+                                ${completedDate ?
+                                    `<br><i class="bi bi-calendar-check"></i> Vypolneno: ${completedDate}` : ''}
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="btn-group">
+                                ${!task.isCompleted ? `
+                                <button class="btn btn-success action-btn me-2"
+                                        onclick="completeTask(${task.id})"
+                                        title="Otmetit vypolnennoi">
+                                    <i class="bi bi-check-lg"></i>
+                                </button>` : ''}
+                                <button class="btn btn-primary action-btn me-2"
+                                        onclick="editTask(${task.id})"
+                                        title="Redaktirovat">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-danger action-btn"
+                                        onclick="deleteTask(${task.id})"
+                                        title="Udalit">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function updateStats(tasks) {
+            const total = tasks.length;
+            const completed = tasks.filter(t => t.isCompleted).length;
+            const active = total - completed;
+
+            document.getElementById('totalTasks').textContent = total;
+            document.getElementById('activeTasks').textContent = active;
+            document.getElementById('completedTasks').textContent = completed;
+        }
+
+        async function addTask() {
+            const title = document.getElementById('taskTitle').value.trim();
+            const description = document.getElementById('taskDescription').value.trim();
+
+            if (!title) {
+                alert('Pozhaluista, vvedite nazvanie zadachi');
+                document.getElementById('taskTitle').focus();
+                return;
+            }
+
+            const task = {
+                title: title,
+                description: description,
+                isCompleted: false
+            };
+
+            try {
+                const response = await fetch('/api/tasks', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(task)
+                });
+
+                if (response.ok) {
+                    document.getElementById('taskTitle').value = '';
+                    document.getElementById('taskDescription').value = '';
+                    loadTasks();
+                    document.getElementById('taskTitle').focus();
+                } else {
+                    const error = await response.text();
+                    alert('Oshibka: ' + error);
+                }
+            } catch (error) {
+                console.error('Oshibka:', error);
+                alert('Oshibka pri dobavlenii zadachi');
+            }
+        }
+
+        async function completeTask(id) {
+            try {
+                const response = await fetch(`/api/tasks/${id}/complete`, {
+                    method: 'PATCH'
+                });
+
+                if (response.ok) {
+                    loadTasks();
+                } else {
+                    alert('Oshibka pri vypolnenii zadachi');
+                }
+            } catch (error) {
+                console.error('Oshibka:', error);
+                alert('Oshibka pri vypolnenii zadachi');
+            }
+        }
+
+        async function editTask(id) {
+            try {
+                const response = await fetch(`/api/tasks/${id}`);
+                if (!response.ok) throw new Error('Oshibka zagruzki');
+
+                const task = await response.json();
+                currentEditId = id;
+
+                document.getElementById('editTitle').value = task.title;
+                document.getElementById('editDescription').value = task.description || '';
+                document.getElementById('editIsCompleted').checked = task.isCompleted;
+
+                const modal = new bootstrap.Modal(document.getElementById('editModal'));
+                modal.show();
+            } catch (error) {
+                console.error('Oshibka:', error);
+                alert('Oshibka pri zagruzke zadachi dlia redaktirovaniia');
+            }
+        }
+
+        async function saveEditedTask() {
+            if (!currentEditId) return;
+
+            const task = {
+                id: currentEditId,
+                title: document.getElementById('editTitle').value.trim(),
+                description: document.getElementById('editDescription').value.trim(),
+                isCompleted: document.getElementById('editIsCompleted').checked
+            };
+
+            if (!task.title) {
+                alert('Nazvanie zadachi ne mozhet byt pustym');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/tasks/${currentEditId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(task)
+                });
+
+                if (response.ok) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
+                    modal.hide();
+                    loadTasks();
+                } else {
+                    const error = await response.text();
+                    alert('Oshibka: ' + error);
+                }
+            } catch (error) {
+                console.error('Oshibka:', error);
+                alert('Oshibka pri sohranenii izmenenii');
+            }
+        }
+
+        async function deleteTask(id) {
+            if (!confirm('Vy uvereny, chto hotite udalit etu zadachu?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/tasks/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    loadTasks();
+                } else {
+                    alert('Oshibka pri udalenii zadachi');
+                }
+            } catch (error) {
+                console.error('Oshibka:', error);
+                alert('Oshibka pri udalenii zadachi');
+            }
+        }
+
+        function showLoading(show) {
+            const container = document.getElementById('tasksContainer');
+            if (show && container.children.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Zagruzka...</span>
+                        </div>
+                        <p class="mt-2">Zagruzhaem zadachi...</p>
+                    </div>`;
+            }
+        }
+
+        document.getElementById('taskTitle').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addTask();
+            }
+        });
+    </script>
+</body>
+</html>
